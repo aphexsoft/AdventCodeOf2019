@@ -43,54 +43,66 @@ def IntProgramm(inputvalue):
             if rest:
                 operation -= step/10
             modes.append(rest)
-        param1 = 0
-        param2 = 0
-        if opcode==3:
-            out = mem[ic+1]
-        elif opcode == 4:
-            out = 0
-            param = 1
-            param1 = GetParameterValue(param,modes,mem[ic+param]) 
-        else:
-            param = 1
-            param1 = GetParameterValue(param,modes,mem[ic+param]) 
-            param = 2
-            param2 = GetParameterValue(param,modes,mem[ic+param])
-            param = 3
-            out = mem[ic+param]
-
-        result = ExecuteOptCode(opcode,ic,inputvalue,param1,param2) 
         
-        if out > 0:
-            mem[out] = result
-
-        ic += GetNextOperation(opcode)
+        ic = ExecuteOptCode(opcode,ic,modes,inputvalue) 
+        
 
 def GetParameterValue(param,modes,memval):
     return mem[memval] if not modes[param-1] else memval
 
-def ExecuteOptCode(opCode,mempos,inputvalue,val1,val2):
+def ExecuteOptCode(opcode,mempos,modes,inputvalue):
+
     global mem
-    if opCode == 1:
-        return val1 + val2
-    elif opCode == 2:
-        return val1 * val2
-    elif opCode == 3:
-        return inputvalue
-    elif opCode == 4:
+    val1 = GetParameterValue(1,modes,mem[mempos+1]) 
+    
+    if opcode == 1:       
+        val2 = GetParameterValue(2,modes,mem[mempos+2]) 
+        out = mem[mempos+3] 
+        mem[out] = val1 + val2
+    elif opcode == 2:        
+        val2 = GetParameterValue(2,modes,mem[mempos+2]) 
+        out = mem[mempos+3] 
+        mem[out] = val1 * val2
+    elif opcode == 3:
+        val1 = mem[mempos+1]
+        mem[val1] = inputvalue
+    elif opcode == 4:        
         print(val1)
+    elif opcode == 5:
+        val2 = GetParameterValue(2,modes,mem[mempos+2])
+        if val1 != 0:
+            return val2        
+    elif opcode == 6:
+        val2 = GetParameterValue(2,modes,mem[mempos+2])
+        if val1 == 0:
+            return val2       
+    elif opcode == 7:
+        val2 = GetParameterValue(2,modes,mem[mempos+2])
+        val3 = mem[mempos + 3]
+        mem[val3] = 1 if val1 < val2 else 0
+    elif opcode == 8:
+        val2 = GetParameterValue(2,modes,mem[mempos+2])
+        val3 = mem[mempos + 3]
+        mem[val3] = 1 if val1 == val2 else 0 
+
+    mempos += GetNextOperation(opcode)
+    return mempos
 
 def GetNextOperation(opcode):
     Jump = {
         1: 4,
         2: 4,
         3: 2,
-        4: 2
+        4: 2,
+        5: 3,
+        6: 3,
+        7: 4,
+        8: 4
     }
     return Jump.get(opcode)
 
 if __name__ == "__main__":
     ReadInput()
     CopyToMem()
-    IntProgramm(1)
+    IntProgramm(5)
 
